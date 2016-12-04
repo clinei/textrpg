@@ -60,6 +60,7 @@ var scenes = {
 		this.loadScene(storage.scene);
 	},
 	go: function(id) {
+		this.saveData();
 		sceneDiv.innerHTML = "";
 		this.loadScene(id);
 		storage.scene = id;
@@ -81,4 +82,15 @@ var scenes = {
 			}
 		}
 	},
+	saveData: function() {
+		var sceneData = {};
+		for (var key in sceneArr) {
+			console.log(key);
+			var scene = sceneArr[key];
+			if (Object.hasOwnProperty.call(scene, "save")) {
+				sceneData[key] = scene.save();
+			}
+		}
+		storage.sceneData = JSON.stringify(sceneData);
+	}
 };
