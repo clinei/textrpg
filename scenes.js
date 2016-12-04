@@ -24,11 +24,14 @@ function StartCave() {
 	};
 
 	this.portals = function() {
-		var res = "";
+		var res = [];
 		
-		res +='<a onclick="scenes.go(\'StartCaveEntrance\')">Go outside</a>'
+		res.push({
+			target: "StartCaveEntrance",
+			text: "Go outside"
+		});
 
-		game.printInfo(res);
+		scenes.showPortals(res);
 	};
 
 	this.save = function() {
@@ -48,9 +51,14 @@ function StartCaveEntrance() {
 	}
 
 	this.portals = function() {
-		var res = "";
-		res +='<a onclick="scenes.go(\'StartCave\')">Go inside</a>'
-		game.printInfo(res);
+		var res = [];
+
+		res.push({
+			target: "StartCave",
+			text: "Go inside"
+		});
+
+		scenes.showPortals(res);
 	}
 }
 
@@ -69,6 +77,15 @@ var scenes = {
 		sceneDiv.innerHTML = "";
 		this.loadScene(id);
 		storage.scene = id;
+	},
+	showPortals: function(portals) {
+		var res = "";
+
+		for (portal of portals) {
+			res += '<a class="link" onclick="scenes.go(\''+ portal.target +'\')">'+ portal.text +'</a>';
+		}
+
+		game.printInfo(res);
 	},
 	loadScene: function(id) {
 		var currScene = sceneArr[id];
