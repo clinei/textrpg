@@ -62,6 +62,7 @@ var scenes = {
 	go: function(id) {
 		sceneDiv.innerHTML = "";
 		this.loadScene(id);
+		storage.scene = id;
 	},
 	loadScene: function(id) {
 		var currScene = sceneArr[id];

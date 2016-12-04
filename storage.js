@@ -6,7 +6,7 @@ var storageFuncs = {
 };
 
 storage = new Proxy(storageFuncs, {
-	set(prop, val) {
+	set(target, prop, val) {
 		localStorage.setItem(prop, val);
 	},
 	get(target, prop) {
