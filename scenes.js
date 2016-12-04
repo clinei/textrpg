@@ -13,6 +13,11 @@ function StartCave() {
 		} else {
 			res = "You wake up inside a cave";
 		}
+
+		this.data = {
+			visited: true
+		};
+
 		game.printInfo(res);
 
 		this.portals();
@@ -85,7 +90,6 @@ var scenes = {
 	saveData: function() {
 		var sceneData = {};
 		for (var key in sceneArr) {
-			console.log(key);
 			var scene = sceneArr[key];
 			if (Object.hasOwnProperty.call(scene, "save")) {
 				sceneData[key] = scene.save();

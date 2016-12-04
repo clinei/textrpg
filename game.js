@@ -3,7 +3,7 @@ var consoleDiv = document.getElementById("console");
 
 var game = {
 	load: function() {
-		if (storage.version == undefined) {
+		if (storage.scene == undefined) {
 			storage.init();
 		}
 		scenes.init();
