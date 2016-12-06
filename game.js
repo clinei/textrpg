@@ -22,7 +22,13 @@ var game = {
 		dataMan.addJournal(str);
 		this.addJournalView(str);
 	},
+	clearJournal: function() {
+		journalDiv.innerHTML = "";
+	},
 	addJournalView: function(str) {
+		if (journalDiv.childNodes.length >= 1) {
+			journalDiv.appendChild(document.createElement('br'));
+		}
 		journalDiv.appendChild(document.createTextNode(str));
 	},
 	loadJournal: function() {
@@ -33,11 +39,11 @@ var game = {
 	logError: function(str) {
 		console.trace(str);
 	},
-	parseSave: function(save) {
-		save.quests;
-		save.inventory;
-		save.scenes;
-	},
+	reset: function() {
+		dataMan.clear();
+		sceneMan.init();
+		this.clearJournal();
+	}
 };
 
 game.load();
