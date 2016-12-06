@@ -1,26 +1,20 @@
-function Scene() {
-	this.desc = "Default scene";
-}
-
-function StartCave() {
+var scenes = {};
+scenes.StartCave = function() {
 	this.desc = "A cave.";
+	this.data = {};
 
 	this.start = function() {
 		var res = "";
 
-		if (this.data && this.data.visited) {
+		if (this.data.visited) {
 			res = "You're in the cave.";
 		} else {
-			res = "You wake up inside a cave";
+			res = "You wake up inside a cave.";
 		}
 
-		this.data = {
-			visited: true
-		};
-
-		game.printInfo(res);
-
-		this.portals();
+		this.data.visited = true;
+		
+		return res;
 	};
 
 	this.portals = function() {
@@ -30,24 +24,67 @@ function StartCave() {
 			target: "StartCaveEntrance",
 			text: "Go outside"
 		});
-
-		scenes.showPortals(res);
-	};
-
-	this.save = function() {
-		return {visited: true};
+ 		
+		res.push({
+			target: "StartCaveDeeper",
+			text: "Go deeper"
+		});
+		
+		return res;
 	};
 }
 
-function StartCaveEntrance() {
+scenes.StartCaveDeeper = function() {
+	this.desc = "Deeper in the first cave.";
+	this.data = {};
+
+	this.start = function() {
+		var res = "";
+		res += "You are deeper in the cave.";
+		return res;
+	};
+
+	this.items = function() {
+		var res = [];
+
+		if (!(this.data.swordTaken)) {
+			res.push({
+				desc: "An old, rusty sword lies on the ground.",
+				text: "Take the sword",
+				scene: this,
+				action: function(e) {
+					dataMan.addItem(items.rustySword);
+					this.scene.data.swordTaken = true;
+					sceneMan.saveData();
+					game.addJournal("You took the sword");
+					dataMan.store();
+					this.parentNode.removeChild(this);
+				}
+			});
+		}
+
+		return res;
+	};	
+
+	this.portals = function() {
+		var res = [];
+
+		res.push({
+			target: "StartCave",
+			text: "Go toward the cave entrance"
+		});
+
+		return res;
+	};
+}
+
+scenes.StartCaveEntrance = function() {
 	this.desc = "Entrance to the first cave.";
 
 	this.start = function() {
 		var res = "";
 		res += "You are outside the cave.";
-		game.printInfo(res);
-
-		this.portals();
+		return res;
 	}
 
 	this.portals = function() {
@@ -57,61 +94,95 @@ function StartCaveEntrance() {
 			target: "StartCave",
 			text: "Go inside"
 		});
-
-		scenes.showPortals(res);
+		
+		return res;
 	}
 }
 
-var sceneArr = {
-	StartCave: new StartCave(),
-	StartCaveEntrance: new StartCaveEntrance(),
-};
-
-var scenes = {
+var sceneMan = {
 	init: function() {
+		this.loaded = {};
+		this.loadScenes();
 		this.loadData();
-		this.loadScene(storage.scene);
+		this.go(data.scene);
+	},
+	loaded: {},
+	loadScenes: function() {
+		for (key of Object.keys(scenes)) {
+			this.loaded[key] = new scenes[key];
+		}
+	},
+	portalHandler: function() {
+		sceneMan.go(this.target);
 	},
 	go: function(id) {
-		this.saveData();
 		sceneDiv.innerHTML = "";
 		this.loadScene(id);
-		storage.scene = id;
+		data.scene = id;
+		this.saveData();
+		dataMan.store();
 	},
 	showPortals: function(portals) {
-		var res = "";
+		var portalList = document.createElement('div');
 
 		for (portal of portals) {
-			res += '<a class="link" onclick="scenes.go(\''+ portal.target +'\')">'+ portal.text +'</a>';
+			var portalEl = document.createElement('p');
+			portalEl.className = "link";
+			portalEl.target = portal.target;
+			portalEl.addEventListener("click", this.portalHandler);
+			portalEl.innerHTML = portal.text;
+			portalList.appendChild(portalEl);
 		}
 
-		game.printInfo(res);
+		game.addScene(portalList);
+	},
+	showItems: function(items) {
+		var itemList = document.createElement('p');
+
+		for (item of items) {
+			var itemEl = document.createElement('a');
+			itemEl.scene = item.scene;
+			itemEl.className = "link";
+			itemEl.addEventListener("click", item.action);
+			itemEl.innerHTML = item.text;
+			itemList.appendChild(document.createTextNode(item.desc +" "));
+			itemList.appendChild(itemEl);
+		}
+
+		game.addScene(itemList);
 	},
 	loadScene: function(id) {
-		var currScene = sceneArr[id];
+		var currScene = this.loaded[id];
 		if (currScene) {
-			currScene.start();
+			if (currScene.start) {
+				game.printInfo(currScene.start());
+			}
+			if (currScene.items) {
+				this.showItems(currScene.items());
+			}
+			if (currScene.portals) {
+				this.showPortals(currScene.portals());
+			}
 		} else {
 			game.logError("can't load scene (id: \""+ id +"\")");
 		}
 	},
 	loadData: function() {
-		var sceneData = storage.sceneData;
+		var sceneData = data.sceneData;
 		if (sceneData) {
-			sceneData = JSON.parse(sceneData);
 			for (var id of Object.keys(sceneData)) {
-				sceneArr[id].data = sceneData[id]; 
+				this.loaded[id].data = sceneData[id]; 
 			}
 		}
 	},
 	saveData: function() {
 		var sceneData = {};
-		for (var key in sceneArr) {
-			var scene = sceneArr[key];
-			if (Object.hasOwnProperty.call(scene, "save")) {
-				sceneData[key] = scene.save();
+		for (key of Object.keys(this.loaded)) {
+			var scene = this.loaded[key];
+			if (Object.hasOwnProperty.call(scene, "data")) {
+				sceneData[key] = scene.data;
 			}
 		}
-		storage.sceneData = JSON.stringify(sceneData);
+		data.sceneData = sceneData;
 	}
 };
