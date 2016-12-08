@@ -1,3 +1,0 @@
-[submodule "deps/proxy-polyfill"]
-	path = deps/proxy-polyfill
-	url = https://github.com/GoogleChrome/proxy-polyfill

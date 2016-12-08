@@ -1,3 +1,7 @@
+function removeElem(elem) {
+	elem.parentNode.removeChild(elem);
+}
+
 var scenes = {};
 scenes.StartCave = function() {
 	this.desc = "A cave.";
@@ -21,7 +25,7 @@ scenes.StartCave = function() {
 		var res = [];
 		
 		res.push({
-			target: "StartCaveEntrance",
+			target: "Battle",
 			text: "Go outside"
 		});
  		
@@ -54,11 +58,12 @@ scenes.StartCaveDeeper = function() {
 				scene: this,
 				action: function(e) {
 					dataMan.addItem(items.rustySword);
+					data.weapon = "rustySword";
 					this.scene.data.swordTaken = true;
 					sceneMan.saveData();
 					game.addJournal("You took the sword");
 					dataMan.store();
-					this.parentNode.removeChild(this);
+					removeElem(this);
 				}
 			});
 		}
@@ -98,6 +103,55 @@ scenes.StartCaveEntrance = function() {
 		return res;
 	}
 }
+
+scenes.Battle = function() {
+	var that = this;
+	this.data = {};
+	this.attackButton = null;
+	
+	this.start = function() {
+		var res = "";
+		res  +=  "Battle start!";
+		
+		this.data.monster = {
+			health: 3,
+			hit: function(damage) {
+				if (this.health <= damage) {
+					game.addJournal("You killed a monster!");
+					that.end();
+				} else {
+					this.health -= damage;
+				}
+			}
+		};
+		
+		return res;
+	};
+	
+	this.end = function() {
+		removeElem(this.attackButton);
+		this.attackButton = null;
+	};
+	
+	this.items = function() {
+		var res = [];
+		
+		res.push({
+			text: "Attack!",
+			scene: this,
+			action: function() {
+				this.scene.attackButton = this;
+				if (data.weapon) {
+					this.scene.data.monster.hit(items[data.weapon].damage);
+				} else {
+					this.scene.data.monster.hit(items.hands.damage);
+				}
+			}
+		});
+		
+		return res;
+	};
+};
 
 var sceneMan = {
 	init: function() {
@@ -145,7 +199,9 @@ var sceneMan = {
 			itemEl.className = "link";
 			itemEl.addEventListener("click", item.action);
 			itemEl.innerHTML = item.text;
-			itemList.appendChild(document.createTextNode(item.desc +" "));
+			if (item.desc) {
+				itemList.appendChild(document.createTextNode(item.desc +" "));
+			}
 			itemList.appendChild(itemEl);
 		}
 
